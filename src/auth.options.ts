@@ -3,7 +3,7 @@ import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5500";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7500";
 
 export const authOptions: AuthOptions = {
   providers: [

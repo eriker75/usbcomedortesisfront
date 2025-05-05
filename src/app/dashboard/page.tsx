@@ -1,5 +1,4 @@
 import { getServerSession } from "next-auth";
-import { headers } from "next/headers";
 import { Suspense } from "react";
 import Image from "next/image";
 import { authOptions } from "@/auth.options";
@@ -13,7 +12,6 @@ async function getQRCode(email: string) {
     const response = await fetch(
       `${BACKEND_URL}/api/user/qrcode?email=${email}`,
       {
-        headers: headers(),
         cache: "force-cache"
       }
     );

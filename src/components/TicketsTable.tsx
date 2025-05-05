@@ -72,7 +72,7 @@ interface TicketsTableProps {
 }
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5500";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7500";
 
 export default function TicketsTable({
   userID,

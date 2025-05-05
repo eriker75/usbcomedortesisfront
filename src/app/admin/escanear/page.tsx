@@ -4,6 +4,9 @@ import Head from "next/head";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import toast, { Toaster } from "react-hot-toast";
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7500";
+
 const QrScannerPage = () => {
   const [scanResult, setScanResult] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
@@ -22,16 +25,13 @@ const QrScannerPage = () => {
 
   const consumeTicket = async (email: string) => {
     try {
-      const response = await fetch(
-        "http://localhost:5500/api/ticket/consume-ticket",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ email })
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/api/ticket/consume-ticket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
 
       const responseData = await response.json();
 

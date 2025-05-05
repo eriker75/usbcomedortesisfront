@@ -5,10 +5,13 @@ import Image from "next/image";
 import { authOptions } from "@/auth.options";
 import UserCard from "@/components/UseCard";
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7500";
+
 async function getQRCode(email: string) {
   try {
     const response = await fetch(
-      `http://localhost:5500/api/user/qrcode?email=${email}`,
+      `${BACKEND_URL}/api/user/qrcode?email=${email}`,
       {
         headers: headers(),
         cache: "force-cache"

@@ -31,6 +31,9 @@ interface UsersResponse {
   estudianteID?: string;
 }
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:7500";
+
 const CreateTicketPage = () => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<UsersResponse[]>([]);
@@ -55,9 +58,11 @@ const CreateTicketPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get<UsersResponse[]>("http://localhost:5500/api/user");
+        const response = await axios.get<UsersResponse[]>(
+          `${BACKEND_URL}/api/user`
+        );
 
-        console.log(response)
+        console.log(response);
         // Filtrar solo usuarios con role "user"
         const regularUsers = response.data.filter(
           (user: User) => user.role === "user"
@@ -87,13 +92,13 @@ const CreateTicketPage = () => {
 
     setLoading(true);
     try {
-      console.log("data to send",{
+      console.log("data to send", {
         precioTicket: data.precioTicket,
         quantity: data.quantity.toString(),
         userId: data.userId
-      })
+      });
 
-      const response = await axios.post("http://localhost:5500/api/ticket", {
+      const response = await axios.post(`${BACKEND_URL}/api/ticket`, {
         precioTicket: data.precioTicket,
         quantity: data.quantity.toString(),
         userId: data.userId

@@ -51,7 +51,7 @@ export default function Navbar() {
           onClick={() => signOut()}
           className="bg-slate-900 text-white px-6 py-2 rounded-md"
         >
-          Sign Out
+          Cerrar Sesion
         </button>
       )}
     </div>

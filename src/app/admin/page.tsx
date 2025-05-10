@@ -5,6 +5,7 @@ import UserProfileImage from "@/components/UserProfileImage";
 
 const AdminPage = async () => {
   const session = await getServerSession(authOptions);
+  
 
   return (
     <div className="py-8">

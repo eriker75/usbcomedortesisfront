@@ -240,7 +240,7 @@ const CreateTicketPage = () => {
         {/* Precio */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Precio por Ticket (Bs)
+            Precio por Ticket ($)
           </label>
           <input
             type="number"

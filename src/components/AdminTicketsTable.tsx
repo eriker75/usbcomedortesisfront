@@ -18,7 +18,7 @@ import axios from "axios";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Componentes UI
+// Importaciones de componentes UI
 import {
   Table,
   TableBody,
@@ -51,14 +51,10 @@ import {
   User,
   Mail
 } from "lucide-react";
+import { TicketStatus } from "@/definitions/enums";
+import useTicketFilterStore from "@/lib/useTicketFilterStore";
 
-// Tipos
-export enum TicketStatus {
-  Disponible = "Disponible",
-  Usado = "Usado",
-  Anulado = "Anulado"
-}
-
+// Interfaces
 export interface UserInfo {
   _id: string;
   name: string;
@@ -76,7 +72,7 @@ export interface Ticket {
   fechaUso: string | null;
   status: TicketStatus;
   userID: string;
-  user?: UserInfo; // Información del usuario
+  user?: UserInfo;
 }
 
 interface AdminTicketsTableProps {
@@ -95,6 +91,7 @@ export default function AdminTicketsTable({
   pageSize = 5,
   className = ""
 }: AdminTicketsTableProps) {
+  // Estados de la tabla
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -102,14 +99,36 @@ export default function AdminTicketsTable({
     pageSize
   });
 
-  // Filtros adicionales
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [fechaInicio, setFechaInicio] = useState<Date | undefined>(undefined);
-  const [fechaFin, setFechaFin] = useState<Date | undefined>(undefined);
-  const [nameFilter, setNameFilter] = useState<string>("");
-  const [emailFilter, setEmailFilter] = useState<string>("");
+  // Al inicio del componente, después de las declaraciones de estado
+  const statusFilter = useTicketFilterStore((state) => state.statusFilter);
+  const fechaInicio = useTicketFilterStore((state) => state.fechaInicio);
+  const fechaFin = useTicketFilterStore((state) => state.fechaFin);
+  const nameFilter = useTicketFilterStore((state) => state.nameFilter);
+  const emailFilter = useTicketFilterStore((state) => state.emailFilter);
+  const nameSearchValue = useTicketFilterStore(
+    (state) => state.nameSearchValue
+  );
+  const emailSearchValue = useTicketFilterStore(
+    (state) => state.emailSearchValue
+  );
 
-  // Consulta para obtener tickets (ahora con información de usuario)
+  // Acciones
+  const setStatusFilter = useTicketFilterStore(
+    (state) => state.setStatusFilter
+  );
+  const setFechaInicio = useTicketFilterStore((state) => state.setFechaInicio);
+  const setFechaFin = useTicketFilterStore((state) => state.setFechaFin);
+  const setNameFilter = useTicketFilterStore((state) => state.setNameFilter);
+  const setEmailFilter = useTicketFilterStore((state) => state.setEmailFilter);
+  const setNameSearchValue = useTicketFilterStore(
+    (state) => state.setNameSearchValue
+  );
+  const setEmailSearchValue = useTicketFilterStore(
+    (state) => state.setEmailSearchValue
+  );
+  const clearFilters = useTicketFilterStore((state) => state.clearFilters);
+
+  // Consulta para obtener tickets
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
       "admin-tickets",
@@ -126,12 +145,10 @@ export default function AdminTicketsTable({
       params.append("page", String(pagination.pageIndex + 1));
       params.append("limit", String(pagination.pageSize));
 
-      // Filtros de estado
       if (statusFilter !== "all") {
         params.append("status", statusFilter);
       }
 
-      // Filtros de fecha
       if (fechaInicio) {
         params.append("fechaInicio", fechaInicio.toISOString());
       }
@@ -140,7 +157,6 @@ export default function AdminTicketsTable({
         params.append("fechaFin", fechaFin.toISOString());
       }
 
-      // Filtros de usuario
       if (nameFilter) {
         params.append("userName", nameFilter);
       }
@@ -153,13 +169,11 @@ export default function AdminTicketsTable({
         `${BACKEND_URL}/api/ticket?${params.toString()}`
       );
 
-      console.log(response.data);
-
       return response.data;
     }
   });
 
-  // Definición de columnas (ahora incluye info de usuario)
+  // Definición de columnas
   const columns: ColumnDef<Ticket>[] = [
     {
       accessorKey: "_id",
@@ -226,7 +240,7 @@ export default function AdminTicketsTable({
       ),
       cell: ({ row }) => {
         const precio = parseFloat(row.getValue("precioTicket") || "0");
-        return <div className="font-medium">{precio.toFixed(2)} Bs.</div>;
+        return <div className="font-medium">{precio.toFixed(2)} $.</div>;
       }
     },
     {
@@ -312,43 +326,6 @@ export default function AdminTicketsTable({
           </Badge>
         );
       }
-    },
-    {
-      id: "actions",
-      header: "Acciones",
-      cell: ({ row }) => {
-        const ticket = row.original;
-        return (
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // Implementar lógica de edición del ticket
-                console.log("Editar ticket:", ticket._id);
-              }}
-            >
-              Editar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className={
-                ticket.status === TicketStatus.Anulado
-                  ? "text-gray-400"
-                  : "text-red-500"
-              }
-              disabled={ticket.status === TicketStatus.Anulado}
-              onClick={() => {
-                // Implementar lógica de anulación del ticket
-                console.log("Anular ticket:", ticket._id);
-              }}
-            >
-              Anular
-            </Button>
-          </div>
-        );
-      }
     }
   ];
 
@@ -374,38 +351,24 @@ export default function AdminTicketsTable({
       : -1
   });
 
-  // Aplicar filtros y refrescar datos
+  // Efectos para refrescar datos y manejar búsquedas
   useEffect(() => {
     refetch();
   }, [statusFilter, fechaInicio, fechaFin, nameFilter, emailFilter, refetch]);
-
-  // Limpiar filtros
-  const handleClearFilters = () => {
-    setStatusFilter("all");
-    setFechaInicio(undefined);
-    setFechaFin(undefined);
-    setNameFilter("");
-    setEmailFilter("");
-    setColumnFilters([]);
-  };
-
-  // Búsqueda con temporizador
-  const [nameSearchValue, setNameSearchValue] = useState("");
-  const [emailSearchValue, setEmailSearchValue] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setNameFilter(nameSearchValue);
     }, 500);
     return () => clearTimeout(timer);
-  }, [nameSearchValue]);
+  }, [nameSearchValue, setNameFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setEmailFilter(emailSearchValue);
     }, 500);
     return () => clearTimeout(timer);
-  }, [emailSearchValue]);
+  }, [emailSearchValue, setEmailFilter]);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -419,7 +382,7 @@ export default function AdminTicketsTable({
                   placeholder="Buscar por nombre de usuario..."
                   value={nameSearchValue}
                   onChange={(e) => setNameSearchValue(e.target.value)}
-                  className="pl-8 w-[240px]"
+                  className="pl-8 w-[300px]"
                 />
               </div>
 
@@ -445,16 +408,13 @@ export default function AdminTicketsTable({
               />
             </div>
 
-            <Button variant="outline" onClick={handleClearFilters}>
+            <Button variant="outline" onClick={clearFilters}>
               Limpiar filtros
             </Button>
           </div>
 
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value)}
-            >
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -473,7 +433,7 @@ export default function AdminTicketsTable({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[150px] pl-3 text-left font-normal"
+                    className="w-[200px] pl-3 text-left font-normal"
                   >
                     {fechaInicio
                       ? format(fechaInicio, "PPP", { locale: es })
@@ -495,7 +455,7 @@ export default function AdminTicketsTable({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-[150px] pl-3 text-left font-normal"
+                    className="w-[200px] pl-3 text-left font-normal"
                   >
                     {fechaFin
                       ? format(fechaFin, "PPP", { locale: es })

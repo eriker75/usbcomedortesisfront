@@ -37,10 +37,8 @@ const QrScannerPage = () => {
 
       if (response.ok) {
         toast.success(responseData.message);
-        console.log("Éxito:", responseData);
       } else {
-        toast.error(responseData.message);
-        console.error("Error:", responseData);
+        toast.error(responseData.message || "Error al procesar el ticket");
       }
     } catch (error) {
       toast.error("Error al comunicarse con el servidor");
@@ -64,11 +62,39 @@ const QrScannerPage = () => {
     [scanResult]
   );
 
+  const handleQrCodeError = (err: unknown) => {
+    // Ignore NotFoundException as it's a normal part of scanning
+    if (err instanceof Error && err.name === "NotFoundException") {
+      return; // Silent fail for "no QR code found" errors
+    }
+
+    console.debug("QR code scan error:", err);
+
+    if (err instanceof Error) {
+      const errorMessage = err.message.toLowerCase();
+      if (
+        errorMessage.includes("camera") ||
+        errorMessage.includes("permission") ||
+        errorMessage.includes("not found") ||
+        errorMessage.includes("not available")
+      ) {
+        const userMessage =
+          "Error con la cámara. Por favor, verifica los permisos.";
+        if (cameraError !== userMessage) {
+          // Prevent duplicate errors
+          toast.error(userMessage);
+          setCameraError(userMessage);
+          stopScanner();
+        }
+      }
+    }
+  };
+
   const startScanner = () => {
     if (!scannerRef.current && !isScanning) {
       try {
         navigator.mediaDevices
-          .getUserMedia({ video: true })
+          .getUserMedia({ video: { facingMode: "environment" } })
           .then(() => {
             scannerRef.current = new Html5QrcodeScanner(
               "reader",
@@ -81,59 +107,39 @@ const QrScannerPage = () => {
                 aspectRatio: 1.0,
                 showTorchButtonIfSupported: true,
                 showZoomSliderIfSupported: true,
-                defaultZoomValueIfSupported: 2
+                defaultZoomValueIfSupported: 2,
+                rememberLastUsedCamera: true,
+                videoConstraints: {
+                  facingMode: { ideal: "environment" }
+                }
               },
               false
             );
 
-            // Modificamos la función de error para que solo muestre errores críticos
-            const error = (err: unknown) => {
-              // Solo registrar errores en la consola para debugging
-              console.debug("QR code scan error:", err);
-
-              // Verificar si es un error crítico que necesita ser mostrado
-              if (err instanceof Error) {
-                const errorMessage = err.message.toLowerCase();
-                if (
-                  errorMessage.includes("camera") ||
-                  errorMessage.includes("permission") ||
-                  errorMessage.includes("not found") ||
-                  errorMessage.includes("not available")
-                ) {
-                  toast.error(
-                    "Error con la cámara. Por favor, verifica los permisos."
-                  );
-                  setCameraError(
-                    "Error con la cámara. Por favor, verifica los permisos."
-                  );
-                  stopScanner(); // Detener el escáner si hay un error crítico
-                }
-              }
-            };
-
-            scannerRef.current.render(handleQrCodeSuccess, error);
+            scannerRef.current.render(handleQrCodeSuccess, handleQrCodeError);
             setIsScanning(true);
             setCameraError(null);
             toast.success("Escáner iniciado", {
-              id: "scanner-start", // Identificador único para evitar duplicados
+              id: "scanner-start",
               duration: 2000
             });
           })
           .catch((err) => {
-            setCameraError(
-              "No se pudo acceder a la cámara. Por favor, verifica los permisos."
-            );
-            toast.error("Error al acceder a la cámara", {
-              id: "camera-error" // Identificador único para evitar duplicados
+            const errorMessage =
+              "No se pudo acceder a la cámara. Por favor, verifica los permisos.";
+            setCameraError(errorMessage);
+            toast.error(errorMessage, {
+              id: "camera-error"
             });
-            console.error(err);
+            console.error("Camera access error:", err);
           });
       } catch (err) {
-        setCameraError("Error al inicializar la cámara");
-        toast.error("Error al inicializar la cámara", {
-          id: "init-error" // Identificador único para evitar duplicados
+        const errorMessage = "Error al inicializar la cámara";
+        setCameraError(errorMessage);
+        toast.error(errorMessage, {
+          id: "init-error"
         });
-        console.error(err);
+        console.error("Scanner initialization error:", err);
       }
     }
   };
@@ -181,7 +187,6 @@ const QrScannerPage = () => {
                 color: "#fff",
                 borderRadius: "8px"
               },
-              // Prevenir múltiples toasts del mismo tipo
               success: {
                 duration: 2000,
                 id: "success-toast"

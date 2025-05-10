@@ -281,12 +281,12 @@ export default function TicketsTable({
   }, [statusFilter, fechaInicio, fechaFin, refetch]);
 
   // Limpiar filtros
-  const handleClearFilters = () => {
+  /* const handleClearFilters = () => {
     setStatusFilter("all");
     setFechaInicio(undefined);
     setFechaFin(undefined);
     setColumnFilters([]);
-  };
+  }; */
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -366,9 +366,9 @@ export default function TicketsTable({
             </div>
           </div>
 
-          <Button variant="outline" onClick={handleClearFilters}>
+          {/* <Button variant="outline" onClick={handleClearFilters}>
             Limpiar filtros
-          </Button>
+          </Button> */}
         </div>
       )}
 

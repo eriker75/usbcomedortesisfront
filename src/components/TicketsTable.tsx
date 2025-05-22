@@ -163,7 +163,7 @@ export default function TicketsTable({
       ),
       cell: ({ row }) => {
         const precio = parseFloat(row.getValue("precioTicket") || "0");
-        return <div className="font-medium">{precio.toFixed(2)} Bs.</div>;
+        return <div className="font-medium">{precio.toFixed(2)} $.</div>;
       }
     },
     {

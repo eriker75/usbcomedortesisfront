@@ -137,6 +137,11 @@ export default function TicketsTable({
       );
       return response.data;
     },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 500,
+    refetchInterval: 1000,
     enabled: !!effectiveUserId
   });
 

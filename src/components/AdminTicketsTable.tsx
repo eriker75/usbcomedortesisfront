@@ -170,7 +170,12 @@ export default function AdminTicketsTable({
       );
 
       return response.data;
-    }
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    staleTime: 500,
+    refetchInterval: 1000,
   });
 
   // Definición de columnas
